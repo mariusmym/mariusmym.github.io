@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Open-source hardware, firmware and software projects by mariusmym.">
+<title>mariusmym // repos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: terminal session — prompt header, stat line, filter bar, dense card grid, footer log */
+:root{
+  /* "PCB" palette: matte solder-mask black, green accent, silkscreen white */
+  --page:#0c1012;--panel:#11171a;--card:#151c20;--hover:#1b252a;--line:#243037;--line2:#34444c;--line3:#4a5b64;
+  --head:#f1f5f7;--text:#cbd5da;--text2:#adbac1;--text3:#8e9ea6;--muted:#71828b;--dim:#5b6b73;
+  --copper:#b8bb26;--cyan:#4cc9c0;--gold:#f1c45b;--amber:#e3995a;--err:#ef6b73;--blue:#6ea9e6;--violet:#b394f0;--mask:#6cc48a;
+  --display:'Chakra Petch','Bahnschrift','Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono','Cascadia Code',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font:14px/1.6 var(--mono);
+  background-image:radial-gradient(circle,rgba(76,201,192,.09) 1px,transparent 1.2px),radial-gradient(ellipse at 85% -10%,rgba(184,187,38,.08),transparent 50%);
+  background-size:22px 22px,100% 100%;background-attachment:fixed;min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:36px 48px}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+
+/* header */
+.prompt{color:var(--muted);font-size:12px;margin-bottom:10px;overflow-wrap:anywhere}
+.prompt .u{color:var(--cyan)}.prompt .p{color:var(--blue)}
+.cursor{display:inline-block;width:8px;height:14px;background:var(--copper);vertical-align:-2px;margin-left:4px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+h1{margin:0;color:var(--head);font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.01em;
+  font-size:clamp(28px,6vw,52px);line-height:1.05;text-shadow:0 0 22px rgba(184,187,38,.28);text-wrap:balance}
+h1 span{color:var(--copper)}
+.sub em{color:var(--copper);font-style:normal}
+.sub{color:var(--text3);margin:10px 0 0;max-width:68ch}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:3px;font-size:12px;color:var(--text2);background:var(--panel);transition:all .15s}
+.btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn.primary{background:var(--copper);color:var(--page);border-color:var(--copper);font-weight:700}
+.btn.primary:hover{background:var(--cyan);border-color:var(--cyan);color:var(--page)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;margin:28px 0 22px;overflow:hidden}
+.stat{background:var(--panel);padding:12px 14px}
+.label{font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.stat b{display:block;font-family:var(--display);font-size:24px;color:var(--head);font-variant-numeric:tabular-nums;font-weight:700}
+.stat b small{font-size:12px;color:var(--muted);font-weight:400}
+.langbar{display:flex;height:6px;border-radius:2px;overflow:hidden;margin-top:8px;background:var(--hover)}
+
+/* controls */
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.search{flex:1 1 240px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:0 10px;min-width:0}
+.search span{color:var(--amber);font-size:12px;white-space:nowrap}
+.search input{flex:1;min-width:0;background:none;border:0;color:var(--text);font:inherit;padding:8px 0;outline:none}
+.search:focus-within{border-color:var(--cyan)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:6px 10px;border-radius:3px;border:1px solid var(--line);background:var(--panel);color:var(--text3);cursor:pointer;transition:all .15s}
+.chip:hover{color:var(--head);border-color:var(--line2)}
+.chip[aria-pressed="true"]{background:var(--copper);color:var(--page);border-color:var(--copper);font-weight:700}
+.chip .n{opacity:.7;margin-left:4px}
+select{font:inherit;font-size:12px;background:var(--panel);color:var(--text2);border:1px solid var(--line);border-radius:3px;padding:7px 8px}
+.status{font-size:11px;color:var(--dim);margin:-6px 0 14px}
+.status .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--gold)}
+.status.live .dot{background:var(--copper)}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+@media (max-width:420px){.grid{grid-template-columns:1fr}}
+.card{position:relative;display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:3px;padding:16px;transition:background .15s,border-color .15s;min-width:0}
+.card::before{content:"";position:absolute;left:-1px;right:-1px;top:-1px;height:2px;background:var(--cyan);opacity:0;transition:opacity .15s;border-radius:3px 4px 0 0}
+.card:hover{background:var(--hover);border-color:var(--line2)}
+.card:hover::before{opacity:1}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.name{color:var(--head);font-weight:700;font-size:14px;overflow-wrap:anywhere}
+.name::before{content:"./";color:var(--copper);font-weight:400}
+.stars{color:var(--gold);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.desc{color:var(--text2);font-size:12.5px;margin:0;flex:1}
+.desc.empty{color:var(--dim);font-style:italic}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:10.5px;padding:2px 6px;border-radius:2px;background:var(--panel);border:1px solid var(--line);color:var(--text3)}
+.tag.cat{color:var(--page);border-color:transparent;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.tag.fork{color:var(--violet);border-color:var(--violet)}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px;font-variant-numeric:tabular-nums}
+.lang i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.empty-state{grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:3px}
+
+/* timeline */
+h2{font-family:var(--display);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:40px 0 12px}
+.log{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px 16px;font-size:12px;overflow-x:auto}
+.log div{white-space:nowrap}
+.log .h{color:var(--gold)}.log .d{color:var(--dim)}.log .m{color:var(--text2)}
+footer{margin-top:32px;font-size:11px;color:var(--dim);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="prompt"><span class="u">marius@github</span>:<span class="p">~/repos</span>$ ls -la --sort=time<span class="cursor"></span></div>
+    <h1>mariusmym<span>/</span>repos</h1>
+    <p class="sub">Just a noob doing stuff he's not supposed to. Custom PCBs, firmware for ESP32 / ATtiny / CH32V, themes for retro handhelds and the odd software tool, mostly built by reading the datasheet <em>after</em> the magic smoke came out. <em>The good news:</em> every project here was actually built and tested on my desk, so the smoke already escaped during development and none should rise from these repositories. Everything is open-source, so feel free to copy my mistakes.</p>
+    <div class="links">
+      <a class="btn primary" href="https://github.com/mariusmym" target="_blank" rel="noopener">→ github.com/mariusmym</a>
+      <a class="btn" href="https://github.com/mariusmym?tab=repositories" target="_blank" rel="noopener">all repositories</a>
+    </div>
+  </header>
+
+  <section class="stats" id="stats" aria-label="Stats"></section>
+
+  <div class="bar">
+    <label class="search" for="q"><span>$ grep -i</span><input id="q" type="search" placeholder="esp32, pcb, attiny…" autocomplete="off"></label>
+    <div class="chips" id="chips" role="group" aria-label="Category filter"></div>
+    <select id="sort" aria-label="Sort">
+      <option value="pushed">sort: last push</option>
+      <option value="stars">sort: stars</option>
+      <option value="created">sort: created</option>
+      <option value="name">sort: name</option>
+    </select>
+  </div>
+  <div class="status" id="status"><span class="dot"></span>snapshot</div>
+
+  <main class="grid" id="grid"></main>
+
+  <h2>git log --repos --reverse</h2>
+  <div class="log" id="log"></div>
+
+  <footer>
+    <span>// date: GitHub REST API · public repos</span>
+    <span id="foot"></span>
+  </footer>
+</div>
+
+<script>
+const USER = 'mariusmym';
+// Snapshot used when the live API is unreachable (e.g. inside a sandboxed preview).
+const SNAPSHOT = [
+ {name:"CYD-Weather-Station",description:"ESP32 CYD weather station with OpenWeather free API, dark/light themes, SD logging, touch UI, and auto-backlight timeout",language:"C++",fork:false,stars:7,forks:0,pushed_at:"2026-04-29T09:08:41Z",created_at:"2026-04-11T20:50:05Z",license:"MIT"},
+ {name:"R36XX-DTB-Files",description:"DTB Files for R36XX-V21 2024-12-18",language:null,fork:false,stars:0,forks:0,pushed_at:"2026-07-08T16:03:47Z",created_at:"2026-05-19T12:28:09Z",license:null},
+ {name:"ATtiny-Focus-Timer",description:"A minimal, distraction-free focus timer built around the ATtiny1614 microcontroller.",language:"C++",fork:false,stars:6,forks:0,pushed_at:"2026-04-19T05:50:17Z",created_at:"2026-04-14T05:30:56Z",license:"MIT"},
+ {name:"LedClock-AIO",description:"All In One (PCB) version of the LedClock project by @imeszaros",language:null,fork:false,stars:1,forks:0,pushed_at:"2026-04-15T07:29:27Z",created_at:"2026-01-22T06:14:26Z",license:"MIT"},
+ {name:"USB-C-CH340K-Auto-Reset-Programmer",description:"A compact USB-to-serial programmer for ESP-based boards, featuring a CH340K chip, USB-C connector, and a built-in auto-reset circuit.",language:null,fork:false,stars:1,forks:0,pushed_at:"2026-04-15T08:29:20Z",created_at:"2026-04-15T08:04:24Z",license:"NOASSERTION"},
+ {name:"LedClock-Resized",description:"Smaller size versions of the Led Clock project. Customizable 7-segment style Wi-Fi connected clock powered by WLED.",language:"C++",fork:true,stars:11,forks:0,pushed_at:"2023-10-10T18:10:05Z",created_at:"2023-03-15T05:35:20Z",license:"MIT"},
+ {name:"CH32V003J4M6-Dev-Board",description:"Basic CH32V003J4M6 Dev Board",language:null,fork:false,stars:0,forks:0,pushed_at:"2026-03-31T06:39:36Z",created_at:"2026-03-31T04:32:45Z",license:null},
+ {name:"WLED-MiniDuo-SR-PJ",description:"ESP32-powered WLED board with sound reactive capabilities and power jack",language:null,fork:false,stars:7,forks:0,pushed_at:"2025-11-19T10:08:56Z",created_at:"2025-11-16T13:41:33Z",license:null},
+ {name:"Noir_SF200_Theme",description:"Dark mode theme for the Data Frog SF2000.",language:null,fork:false,stars:1,forks:0,pushed_at:"2025-08-27T06:44:38Z",created_at:"2025-08-20T06:30:49Z",license:null},
+ {name:"PCB_ChristmasTree",description:"My own version of a PCB Christmas Tree, using an ATtiny85 / ATtiny13A.",language:"C++",fork:false,stars:3,forks:1,pushed_at:"2023-01-22T10:08:18Z",created_at:"2021-12-10T11:47:07Z",license:"GPL-2.0"},
+ {name:"CH340C",description:"Details for using the CH340C with a 328p",language:null,fork:true,stars:0,forks:0,pushed_at:"2018-05-20T17:18:41Z",created_at:"2022-01-19T05:33:16Z",license:null},
+ {name:"WiFi-Relay-Control-and-temp-humidity-monitoring",description:"Arduino Code and AppInventor app",language:null,fork:false,stars:0,forks:1,pushed_at:"2020-04-20T13:19:12Z",created_at:"2020-04-20T13:17:21Z",license:null},
+ {name:"G4M4-BancaApp",description:"aplicatie de test G4M4",language:"C#",fork:false,stars:0,forks:0,pushed_at:"2018-08-22T15:40:23Z",created_at:"2018-07-24T09:11:10Z",license:"GPL-2.0"}
+];
+
+// Category + hardware keyword detection (works for new repos too)
+const CATS = {
+  hardware:{label:'hardware',color:'var(--amber)'},
+  firmware:{label:'firmware',color:'var(--cyan)'},
+  retro:{label:'retro',color:'var(--violet)'},
+  software:{label:'software',color:'var(--blue)'}
+};
+const CHIPS = ['ESP32','ATtiny1614','ATtiny85','ATtiny13A','ATtiny','CH32V003','CH340K','CH340C','328p','WLED','USB-C','OpenWeather','Arduino','SF2000','R36'];
+const LANG_COLORS = {'C++':'#f34b7d','C#':'#178600','C':'#555555','Python':'#3572A5','JavaScript':'#f1e05a','TypeScript':'#3178c6','HTML':'#e34c26'};
+
+function classify(r){
+  const t = (r.name+' '+(r.description||'')+' '+(r.topics||[]).join(' ')).toLowerCase();
+  const c = new Set();
+  if(/pcb|board|programmer|ch340|dtb|aio|clock|tree/.test(t)) c.add('hardware');
+  if(/esp32|attiny|arduino|firmware|wled|ch32v|timer|weather|relay/.test(t) || r.language==='C++' || r.language==='C') c.add('firmware');
+  if(/sf2000|r36|retro|theme|dtb|emul|rom/.test(t)) c.add('retro');
+  if(/app|tool|web|api/.test(t) && !c.has('hardware') || ['C#','Python','JavaScript','TypeScript','HTML'].includes(r.language)) c.add('software');
+  if(!c.size) c.add('software');
+  return [...c];
+}
+function chipsOf(r){
+  const t = r.name+' '+(r.description||'');
+  const found = [];
+  for(const k of CHIPS){ if(t.toLowerCase().includes(k.toLowerCase()) && !found.some(f=>f.toLowerCase().includes(k.toLowerCase()))) found.push(k); }
+  return found.slice(0,4);
+}
+function ago(iso){
+  const d=(Date.now()-new Date(iso))/864e5;
+  if(d<1) return 'today'; if(d<30) return Math.round(d)+'d ago';
+  if(d<365) return Math.round(d/30)+'mo ago'; return (d/365).toFixed(1)+'y ago';
+}
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let repos = [], filter = 'all';
+const $ = id => document.getElementById(id);
+try{ const s = JSON.parse(localStorage.getItem('repos-ui')||'{}'); if(s.sort) $('sort').value=s.sort; if(s.filter) filter=s.filter; }catch(e){}
+function save(){ try{ localStorage.setItem('repos-ui', JSON.stringify({sort:$('sort').value,filter})); }catch(e){} }
+
+function prep(list){ return list.map(r=>({...r, cats:classify(r), chips:chipsOf(r)})); }
+
+function renderStats(){
+  const own = repos.filter(r=>!r.fork);
+  const stars = repos.reduce((a,r)=>a+r.stars,0);
+  const first = repos.reduce((a,r)=>r.created_at<a?r.created_at:a, repos[0]?.created_at||'');
+  const hw = repos.filter(r=>r.cats.includes('hardware')).length;
+  const langs = {}; repos.forEach(r=>{ if(r.language) langs[r.language]=(langs[r.language]||0)+1; });
+  const lt = Object.values(langs).reduce((a,b)=>a+b,0)||1;
+  const bar = Object.entries(langs).sort((a,b)=>b[1]-a[1]).map(([l,n])=>`<span title="${esc(l)}: ${n}" style="width:${n/lt*100}%;background:${LANG_COLORS[l]||'var(--dim)'}"></span>`).join('');
+  $('stats').innerHTML = `
+    <div class="stat"><div class="label">repos</div><b>${repos.length} <small>${own.length} own · ${repos.length-own.length} fork</small></b></div>
+    <div class="stat"><div class="label">stars</div><b style="color:var(--gold)">★ ${stars}</b></div>
+    <div class="stat"><div class="label">hardware / PCB</div><b>${hw}</b></div>
+    <div class="stat"><div class="label">active since</div><b>${first.slice(0,4)}</b></div>
+    <div class="stat"><div class="label">languages</div><b style="font-size:13px;padding-top:6px">${Object.keys(langs).map(esc).join(' · ')||'—'}</b><div class="langbar">${bar}</div></div>`;
+}
+
+function renderChips(){
+  const counts = {all:repos.length};
+  for(const k in CATS) counts[k]=repos.filter(r=>r.cats.includes(k)).length;
+  counts.fork = repos.filter(r=>r.fork).length;
+  const keys = ['all',...Object.keys(CATS).filter(k=>counts[k]),'fork'];
+  $('chips').innerHTML = keys.map(k=>`<button class="chip" data-k="${k}" aria-pressed="${filter===k}">${k}<span class="n">${counts[k]}</span></button>`).join('');
+}
+
+function renderGrid(){
+  const q = $('q').value.trim().toLowerCase();
+  const sort = $('sort').value;
+  let list = repos.filter(r=>{
+    if(filter==='fork' && !r.fork) return false;
+    if(filter!=='all' && filter!=='fork' && !r.cats.includes(filter)) return false;
+    if(q && !(r.name+' '+(r.description||'')+' '+r.chips.join(' ')+' '+(r.language||'')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  list.sort((a,b)=> sort==='stars'? b.stars-a.stars || b.pushed_at.localeCompare(a.pushed_at)
+    : sort==='name'? a.name.localeCompare(b.name)
+    : sort==='created'? b.created_at.localeCompare(a.created_at)
+    : b.pushed_at.localeCompare(a.pushed_at));
+  $('grid').innerHTML = list.length ? list.map(r=>`
+    <a class="card" href="https://github.com/${USER}/${encodeURIComponent(r.name)}" target="_blank" rel="noopener">
+      <div class="top"><span class="name">${esc(r.name)}</span><span class="stars">★ ${r.stars}</span></div>
+      <p class="desc${r.description?'':' empty'}">${esc(r.description?.trim()||'no description')}</p>
+      <div class="tags">
+        ${r.cats.map(c=>`<span class="tag cat" style="background:${CATS[c].color}">${CATS[c].label}</span>`).join('')}
+        ${r.fork?'<span class="tag fork">fork</span>':''}
+        ${r.chips.map(c=>`<span class="tag">${esc(c)}</span>`).join('')}
+      </div>
+      <div class="meta">
+        <span class="lang"><i style="background:${LANG_COLORS[r.language]||'var(--line2)'}"></i>${esc(r.language||'hw files')}</span>
+        ${r.license&&r.license!=='NOASSERTION'?`<span>⚖ ${esc(r.license)}</span>`:''}
+        ${r.forks?`<span>⑂ ${r.forks}</span>`:''}
+        <span title="${esc(r.pushed_at)}">↻ ${ago(r.pushed_at)}</span>
+      </div>
+    </a>`).join('') : `<div class="empty-state">grep: no repos match “${esc(q)}”</div>`;
+}
+
+function renderLog(){
+  const list=[...repos].sort((a,b)=>a.created_at.localeCompare(b.created_at));
+  $('log').innerHTML = list.map(r=>{
+    const h = [...r.name].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7).toString(16).padStart(7,'0').slice(0,7);
+    return `<div><span class="h">${h}</span> <span class="d">${r.created_at.slice(0,10)}</span> <span class="m">init ${esc(r.name)}${r.fork?' (fork)':''}</span></div>`;
+  }).join('');
+}
+
+function renderAll(){ renderStats(); renderChips(); renderGrid(); renderLog(); }
+
+$('chips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return; filter=b.dataset.k; renderChips(); renderGrid(); save(); });
+$('q').addEventListener('input',renderGrid);
+$('sort').addEventListener('change',()=>{ renderGrid(); save(); });
+
+repos = prep(SNAPSHOT);
+if(!repos.some(r=>r.cats.includes(filter)) && !['all','fork'].includes(filter)) filter='all';
+renderAll();
+$('status').innerHTML = '<span class="dot"></span>snapshot · 2026-10-01';
+$('foot').textContent = 'snapshot';
+
+// Live refresh: on GitHub Pages this pulls the current repo list automatically.
+(async()=>{
+  try{
+    const ctl = new AbortController(); setTimeout(()=>ctl.abort(),6000);
+    const res = await fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=pushed`,{signal:ctl.signal});
+    if(!res.ok) throw 0;
+    const data = await res.json();
+    repos = prep(data.map(x=>({name:x.name,description:x.description,language:x.language,fork:x.fork,stars:x.stargazers_count,forks:x.forks_count,pushed_at:x.pushed_at,created_at:x.created_at,license:x.license&&x.license.spdx_id,topics:x.topics})));
+    renderAll();
+    $('status').className='status live';
+    $('status').innerHTML='<span class="dot"></span>live · api.github.com · '+new Date().toLocaleString('en-GB');
+    $('foot').textContent='live';
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
